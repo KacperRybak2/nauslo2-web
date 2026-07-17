@@ -1,4 +1,4 @@
-const CACHE = 'nauslo-v1';
+const CACHE = 'nauslo-v3';
 const ASSETS = [
   './',
   './index.html',
