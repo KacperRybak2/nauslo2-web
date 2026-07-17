@@ -167,12 +167,35 @@ input:focus, textarea:focus, select:focus { font-size: max(16px, 1em); }
 .chip span { display: inline-flex; min-width: 44px; justify-content: center; border: 1px solid var(--line); border-radius: 999px; padding: 9px 12px; background: white; cursor: pointer; font-weight: 700; }
 .chip input:checked + span { background: var(--text); color: white; border-color: var(--text); }
 
-.study-shell { display: flex; flex-direction: column; min-height: calc(100dvh - 42px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); }
-.study-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.study-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100dvh - 42px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  padding-top: var(--study-status-space, 92px);
+}
+.study-status {
+  position: fixed;
+  z-index: 1200;
+  top: calc(var(--visual-viewport-top, 0px) + env(safe-area-inset-top) + 8px);
+  left: 50%;
+  width: min(calc(100% - 32px), 688px);
+  transform: translateX(-50%);
+  -webkit-transform: translateX(-50%);
+  padding: 8px 10px 10px;
+  background: var(--surface);
+  background: color-mix(in srgb, var(--surface) 94%, transparent);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  box-shadow: 0 8px 24px rgba(17, 24, 39, .12);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+.study-header { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; }
+.study-status.no-progress .study-header { margin-bottom: 0; }
 .study-meta { flex: 1; min-width: 0; }
 .study-meta strong { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .study-meta span { color: var(--muted); font-size: .84rem; }
-.progress-track { height: 8px; background: #e5e7eb; border-radius: 999px; overflow: hidden; margin-bottom: 18px; }
+.progress-track { height: 8px; background: #e5e7eb; border-radius: 999px; overflow: hidden; margin-bottom: 0; }
 .progress-bar { height: 100%; background: var(--primary); border-radius: inherit; transition: width .25s ease; }
 .study-card {
   flex: 1; min-height: 340px; display: flex; flex-direction: column; justify-content: center;
