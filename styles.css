@@ -17,7 +17,12 @@
 }
 
 * { box-sizing: border-box; }
-html { background: var(--bg); }
+html {
+  background: var(--bg);
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  overflow-x: hidden;
+}
 body {
   margin: 0;
   min-height: 100vh;
@@ -28,6 +33,7 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 button, input, select, textarea { font: inherit; }
+input, select, textarea { font-size: 16px; }
 button { touch-action: manipulation; }
 a { color: inherit; }
 
@@ -127,6 +133,8 @@ input, textarea, select {
   border-radius: 13px; padding: 13px 14px; min-height: 48px; outline: none;
 }
 input:focus, textarea:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,.13); }
+/* iOS Safari powiększa stronę przy fokusie, gdy pole ma efektywnie mniej niż 16 px. */
+input:focus, textarea:focus, select:focus { font-size: max(16px, 1em); }
 .helper { color: var(--muted); font-size: .88rem; line-height: 1.45; }
 .error-box, .info-box, .success-box {
   border-radius: 14px; padding: 13px 14px; margin: 12px 0; line-height: 1.45; font-size: .92rem;
@@ -173,7 +181,7 @@ input:focus, textarea:focus, select:focus { border-color: var(--primary); box-sh
 }
 .study-label { color: var(--muted); text-transform: uppercase; font-weight: 750; font-size: .75rem; letter-spacing: .11em; }
 .study-word { font-size: clamp(2rem, 9vw, 3.5rem); line-height: 1.14; letter-spacing: -0.045em; margin: 20px 0 28px; overflow-wrap: anywhere; }
-.answer-input { font-size: 1.15rem; text-align: center; padding: 16px; min-height: 58px; }
+.answer-input { font-size: 18px; text-align: center; padding: 16px; min-height: 58px; }
 .study-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
 .study-actions .primary-wide { grid-column: 1 / -1; }
 .study-footer { color: var(--muted); font-size: .84rem; text-align: center; padding-top: 12px; }
@@ -189,9 +197,18 @@ input:focus, textarea:focus, select:focus { border-color: var(--primary); box-sh
   transform: translate(-50%, 20px); opacity: 0; pointer-events: none;
   max-width: min(90vw, 520px); padding: 13px 17px; border-radius: 999px;
   color: white; background: #111827; box-shadow: 0 12px 35px rgba(0,0,0,.22);
-  font-weight: 750; text-align: center; transition: .2s ease;
+  font-weight: 750; text-align: center; transition: opacity .2s ease, transform .2s ease;
 }
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+/* Safari na iOS potrafi pozostawić position: fixed pod klawiaturą.
+   Gdy klawiatura jest otwarta, toast pokazujemy pod górną bezpieczną strefą. */
+.keyboard-open .toast {
+  top: calc(14px + env(safe-area-inset-top));
+  bottom: auto;
+  transform: translate(-50%, -20px);
+}
+.keyboard-open .toast.show { transform: translate(-50%, 0); }
 .toast.success { background: #166534; }
 .toast.error { background: #991b1b; }
 
