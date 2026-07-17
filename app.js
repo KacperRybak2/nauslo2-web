@@ -12,28 +12,32 @@ const fileInput = document.getElementById('file-input');
 let state = loadState();
 let toastTimer = null;
 
-function updateToastViewportPosition() {
+function updateViewportUiPosition() {
   const viewport = window.visualViewport;
-  const offsetTop = viewport ? viewport.offsetTop : 0;
+  const offsetTop = Math.max(0, Math.round(viewport ? viewport.offsetTop : 0));
+  const root = document.documentElement;
+  const studyStatus = document.querySelector('.study-status');
+  const statusHeight = studyStatus ? Math.ceil(studyStatus.getBoundingClientRect().height) : 0;
 
-  // Na iOS klawiatura jest warstwą systemową i zawsze zasłania treść strony.
-  // Ustawiamy toast względem górnej krawędzi aktualnie widocznego obszaru,
-  // także gdy Safari przesunie visual viewport po otwarciu klawiatury.
-  document.documentElement.style.setProperty(
-    '--toast-viewport-top',
-    `${Math.max(10, Math.round(offsetTop) + 10)}px`
-  );
+  // iOS przesuwa visual viewport po pokazaniu klawiatury. Elementy przyklejone
+  // do layout viewportu trzeba skorygować o offsetTop, aby pozostały widoczne.
+  root.style.setProperty('--visual-viewport-top', `${offsetTop}px`);
+  root.style.setProperty('--study-status-space', `${statusHeight ? statusHeight + 14 : 0}px`);
+
+  // Toast w widoku nauki jest wyświetlany pod przyklejonym paskiem statystyk.
+  const toastTop = offsetTop + 10 + (statusHeight ? statusHeight + 8 : 0);
+  root.style.setProperty('--toast-viewport-top', `${toastTop}px`);
 }
 
 if (window.visualViewport) {
-  window.visualViewport.addEventListener('resize', updateToastViewportPosition);
-  window.visualViewport.addEventListener('scroll', updateToastViewportPosition);
+  window.visualViewport.addEventListener('resize', updateViewportUiPosition);
+  window.visualViewport.addEventListener('scroll', updateViewportUiPosition);
 }
-window.addEventListener('resize', updateToastViewportPosition);
-window.addEventListener('orientationchange', updateToastViewportPosition);
-document.addEventListener('focusin', () => requestAnimationFrame(updateToastViewportPosition));
-document.addEventListener('focusout', () => requestAnimationFrame(updateToastViewportPosition));
-updateToastViewportPosition();
+window.addEventListener('resize', updateViewportUiPosition);
+window.addEventListener('orientationchange', updateViewportUiPosition);
+document.addEventListener('focusin', () => requestAnimationFrame(updateViewportUiPosition));
+document.addEventListener('focusout', () => requestAnimationFrame(updateViewportUiPosition));
+updateViewportUiPosition();
 
 function uid(prefix = 'id') {
   if (globalThis.crypto?.randomUUID) return `${prefix}-${crypto.randomUUID()}`;
@@ -173,6 +177,7 @@ function shell(content) {
 
 function showToast(message, type = '') {
   clearTimeout(toastTimer);
+  updateViewportUiPosition();
   toastElement.textContent = message;
   toastElement.className = `toast show ${type}`.trim();
   toastTimer = setTimeout(() => {
@@ -438,15 +443,17 @@ function studyView() {
 
   return shell(`
     <section class="study-shell">
-      <header class="study-header">
-        <button class="icon-btn" data-action="go" data-route="/home" aria-label="Wróć do menu">←</button>
-        <div class="study-meta">
-          <strong>${escapeHtml(session.title)}</strong>
-          <span>${escapeHtml(counter)} · ${session.attempts} prób</span>
-        </div>
-        <button class="icon-btn" data-action="end-session" aria-label="Zakończ sesję">×</button>
-      </header>
-      ${session.mode === 'allRandom' ? '' : `<div class="progress-track"><div class="progress-bar" style="width:${Math.min(100, Math.max(0, progress)).toFixed(1)}%"></div></div>`}
+      <div class="study-status${session.mode === 'allRandom' ? ' no-progress' : ''}">
+        <header class="study-header">
+          <button class="icon-btn" data-action="go" data-route="/home" aria-label="Wróć do menu">←</button>
+          <div class="study-meta">
+            <strong>${escapeHtml(session.title)}</strong>
+            <span>${escapeHtml(counter)} · ${session.attempts} prób</span>
+          </div>
+          <button class="icon-btn" data-action="end-session" aria-label="Zakończ sesję">×</button>
+        </header>
+        ${session.mode === 'allRandom' ? '' : `<div class="progress-track"><div class="progress-bar" style="width:${Math.min(100, Math.max(0, progress)).toFixed(1)}%"></div></div>`}
+      </div>
       <div class="study-card">
         <span class="study-label">Przetłumacz na angielski</span>
         <strong class="study-word">${escapeHtml(item.pl)}</strong>
@@ -504,8 +511,13 @@ function render() {
   else if (route.name === 'complete') app.innerHTML = completeView();
   else app.innerHTML = notFoundView('Nie znaleziono strony.', '/home');
 
+  requestAnimationFrame(updateViewportUiPosition);
+
   if (route.name === 'study') {
-    requestAnimationFrame(() => document.getElementById('answer-input')?.focus());
+    requestAnimationFrame(() => {
+      updateViewportUiPosition();
+      document.getElementById('answer-input')?.focus();
+    });
   }
 }
 
