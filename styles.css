@@ -193,22 +193,31 @@ input:focus, textarea:focus, select:focus { font-size: max(16px, 1em); }
 .complete-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 22px 0; }
 
 .toast {
-  position: fixed; z-index: 100; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom));
-  transform: translate(-50%, 20px); opacity: 0; pointer-events: none;
-  max-width: min(90vw, 520px); padding: 13px 17px; border-radius: 999px;
-  color: white; background: #111827; box-shadow: 0 12px 35px rgba(0,0,0,.22);
-  font-weight: 750; text-align: center; transition: opacity .2s ease, transform .2s ease;
-}
-.toast.show { opacity: 1; transform: translate(-50%, 0); }
-
-/* Safari na iOS potrafi pozostawić position: fixed pod klawiaturą.
-   Gdy klawiatura jest otwarta, toast pokazujemy pod górną bezpieczną strefą. */
-.keyboard-open .toast {
-  top: calc(14px + env(safe-area-inset-top));
+  position: fixed;
+  z-index: 2147483647;
+  left: 50%;
+  top: calc(var(--toast-viewport-top, 10px) + env(safe-area-inset-top));
   bottom: auto;
   transform: translate(-50%, -20px);
+  opacity: 0;
+  pointer-events: none;
+  width: max-content;
+  max-width: min(calc(100vw - 32px), 520px);
+  padding: 13px 17px;
+  border-radius: 999px;
+  color: white;
+  background: #111827;
+  box-shadow: 0 12px 35px rgba(0,0,0,.22);
+  font-weight: 750;
+  text-align: center;
+  transition: opacity .2s ease, transform .2s ease;
+  -webkit-transform: translate(-50%, -20px);
 }
-.keyboard-open .toast.show { transform: translate(-50%, 0); }
+.toast.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+  -webkit-transform: translate(-50%, 0);
+}
 .toast.success { background: #166534; }
 .toast.error { background: #991b1b; }
 
