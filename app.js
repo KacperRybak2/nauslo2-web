@@ -12,6 +12,36 @@ const fileInput = document.getElementById('file-input');
 let state = loadState();
 let toastTimer = null;
 
+let largestVisualViewportHeight = window.visualViewport?.height ?? window.innerHeight;
+
+function updateKeyboardState() {
+  const viewport = window.visualViewport;
+  if (!viewport) return;
+
+  const active = document.activeElement;
+  const isTextField = active instanceof HTMLInputElement || active instanceof HTMLTextAreaElement;
+
+  if (!isTextField) {
+    largestVisualViewportHeight = viewport.height;
+    document.documentElement.classList.remove('keyboard-open');
+    return;
+  }
+
+  largestVisualViewportHeight = Math.max(largestVisualViewportHeight, viewport.height);
+  const heightLoss = largestVisualViewportHeight - viewport.height;
+  const coveredHeight = Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop);
+  document.documentElement.classList.toggle('keyboard-open', Math.max(heightLoss, coveredHeight) > 100);
+}
+
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', updateKeyboardState);
+  window.visualViewport.addEventListener('scroll', updateKeyboardState);
+}
+window.addEventListener('resize', updateKeyboardState);
+document.addEventListener('focusin', () => requestAnimationFrame(updateKeyboardState));
+document.addEventListener('focusout', () => setTimeout(updateKeyboardState, 0));
+updateKeyboardState();
+
 function uid(prefix = 'id') {
   if (globalThis.crypto?.randomUUID) return `${prefix}-${crypto.randomUUID()}`;
   return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
