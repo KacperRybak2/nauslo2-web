@@ -12,35 +12,28 @@ const fileInput = document.getElementById('file-input');
 let state = loadState();
 let toastTimer = null;
 
-let largestVisualViewportHeight = window.visualViewport?.height ?? window.innerHeight;
-
-function updateKeyboardState() {
+function updateToastViewportPosition() {
   const viewport = window.visualViewport;
-  if (!viewport) return;
+  const offsetTop = viewport ? viewport.offsetTop : 0;
 
-  const active = document.activeElement;
-  const isTextField = active instanceof HTMLInputElement || active instanceof HTMLTextAreaElement;
-
-  if (!isTextField) {
-    largestVisualViewportHeight = viewport.height;
-    document.documentElement.classList.remove('keyboard-open');
-    return;
-  }
-
-  largestVisualViewportHeight = Math.max(largestVisualViewportHeight, viewport.height);
-  const heightLoss = largestVisualViewportHeight - viewport.height;
-  const coveredHeight = Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop);
-  document.documentElement.classList.toggle('keyboard-open', Math.max(heightLoss, coveredHeight) > 100);
+  // Na iOS klawiatura jest warstwą systemową i zawsze zasłania treść strony.
+  // Ustawiamy toast względem górnej krawędzi aktualnie widocznego obszaru,
+  // także gdy Safari przesunie visual viewport po otwarciu klawiatury.
+  document.documentElement.style.setProperty(
+    '--toast-viewport-top',
+    `${Math.max(10, Math.round(offsetTop) + 10)}px`
+  );
 }
 
 if (window.visualViewport) {
-  window.visualViewport.addEventListener('resize', updateKeyboardState);
-  window.visualViewport.addEventListener('scroll', updateKeyboardState);
+  window.visualViewport.addEventListener('resize', updateToastViewportPosition);
+  window.visualViewport.addEventListener('scroll', updateToastViewportPosition);
 }
-window.addEventListener('resize', updateKeyboardState);
-document.addEventListener('focusin', () => requestAnimationFrame(updateKeyboardState));
-document.addEventListener('focusout', () => setTimeout(updateKeyboardState, 0));
-updateKeyboardState();
+window.addEventListener('resize', updateToastViewportPosition);
+window.addEventListener('orientationchange', updateToastViewportPosition);
+document.addEventListener('focusin', () => requestAnimationFrame(updateToastViewportPosition));
+document.addEventListener('focusout', () => requestAnimationFrame(updateToastViewportPosition));
+updateToastViewportPosition();
 
 function uid(prefix = 'id') {
   if (globalThis.crypto?.randomUUID) return `${prefix}-${crypto.randomUUID()}`;
